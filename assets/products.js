@@ -32,7 +32,8 @@ window.YUNA.products = [
     url: 'product-imperial-puerh.html',
 
     images: [
-      'assets/products/imperial-puerh-1.jpg',  // TODO: add real photo (missing files fall back to a placeholder)
+      'assets/products/imperial-puerh-1.jpg',  // packaging: box + sachet
+      'assets/products/imperial-puerh-2.jpg',  // brewed cup
     ],
 
     pitch: 'Warming and balancing, our earthy Pu’erh tea is perfect for morning vitality or relieving afternoon fatigue.',
