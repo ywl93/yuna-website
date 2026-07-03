@@ -329,7 +329,16 @@ a { color: inherit; }
   margin: 8px 0 14px;
 }
 .buybox .price { font-size: 1.4rem; color: var(--bark); margin-bottom: 20px; }
-.buybox .short { font-size: 1rem; line-height: 1.7; color: var(--earth); margin-bottom: 26px; }
+.buybox .short { font-size: 1rem; line-height: 1.7; color: var(--earth); margin-bottom: 12px; }
+.buybox .netweight { font-size: 0.9rem; color: var(--earth); margin: 0 0 24px; }
+.buybox .netweight strong { color: var(--bark); font-weight: 400; letter-spacing: 0.02em; }
+
+/* Health benefits block */
+.health .rule { height: 1px; background: var(--line); margin: 24px 0 20px; }
+.health .benefits-title { font-family: 'Jost', sans-serif; font-size: 0.72rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--bark); margin-bottom: 14px; }
+.health .benefits { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.health .benefits li { position: relative; padding-left: 20px; font-size: 0.92rem; line-height: 1.6; color: var(--earth); }
+.health .benefits li::before { content: ''; position: absolute; left: 0; top: 9px; width: 6px; height: 6px; border-radius: 50%; background: var(--goji); opacity: 0.7; }
 
 /* Size selector (Single / Set of 3) */
 .variant-select { display: flex; gap: 12px; margin-bottom: 26px; flex-wrap: wrap; }

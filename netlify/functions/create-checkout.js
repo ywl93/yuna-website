@@ -28,6 +28,10 @@ const PRICE_IDS = {
 // TODO (shipping): countries you ship to. Trim/expand as needed.
 const SHIP_TO = ['HK', 'CN', 'TW', 'MO', 'SG', 'GB', 'US', 'CA', 'AU'];
 
+// Shipping: free at HK$300+, otherwise a flat HK$30. Amounts are in cents (HKD is 2-decimal).
+const FREE_SHIPPING_MIN = 30000; // HK$300
+const FLAT_SHIPPING = 3000;      // HK$30
+
 function json(statusCode, obj) {
   return {
     statusCode,
@@ -81,16 +85,31 @@ exports.handler = async (event) => {
     (event.headers.host ? 'https://' + event.headers.host : '');
 
   try {
+    // Product subtotal (in cents) from the authoritative Stripe prices, to decide shipping.
+    let subtotal = 0;
+    const amountCache = {};
+    for (const li of line_items) {
+      if (amountCache[li.price] === undefined) {
+        const price = await stripe.prices.retrieve(li.price);
+        amountCache[li.price] = price.unit_amount || 0;
+      }
+      subtotal += amountCache[li.price] * li.quantity;
+    }
+
+    const shippingOption = subtotal >= FREE_SHIPPING_MIN
+      ? { shipping_rate_data: { type: 'fixed_amount', fixed_amount: { amount: 0, currency: 'hkd' }, display_name: 'Free shipping' } }
+      : { shipping_rate_data: { type: 'fixed_amount', fixed_amount: { amount: FLAT_SHIPPING, currency: 'hkd' }, display_name: 'Standard shipping' } };
+
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       line_items,
       success_url: origin + '/order-confirmed.html?session_id={CHECKOUT_SESSION_ID}',
       cancel_url: origin + '/checkout-cancelled.html',
       shipping_address_collection: { allowed_countries: SHIP_TO },
+      shipping_options: [shippingOption],
       phone_number_collection: { enabled: true },
       billing_address_collection: 'auto',
       allow_promotion_codes: true,
-      // TODO (shipping rates): shipping_options: [{ shipping_rate: 'shr_xxx' }],
     });
 
     return json(200, { url: session.url });

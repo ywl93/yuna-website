@@ -5,14 +5,11 @@
    indicative prices shown on the pages).
 
    IMPORTANT: money is authoritative in STRIPE, not here. Each variant's `price`
-   below is only for display. The real amount charged comes from the Stripe Price
-   whose ID is wired up (by variant key) in netlify/functions/create-checkout.js
-   via Netlify environment variables (see SETUP.md). Editing a number here never
-   changes what a customer is charged.
+   is only for display. The real amount charged comes from the Stripe Price whose
+   ID is wired up (by variant key) in netlify/functions/create-checkout.js via
+   Netlify environment variables (see SETUP.md).
 
-   Each tea is sold in two sizes ("variants"): Single and Set of 3.
-
-   >>> Fill in the remaining "TODO" copy/photos once ready. <<<
+   Each tea is sold in two sizes ("variants"): Single (1 box) and Set of 3.
    ========================================================================== */
 
 window.YUNA = window.YUNA || {};
@@ -20,9 +17,16 @@ window.YUNA = window.YUNA || {};
 window.YUNA.currency = 'HKD';
 window.YUNA.currencySymbol = 'HK$';
 
+// Health benefits are the same for both teas (per the pu'erh benefits list).
+var PUERH_BENEFITS = [
+  'In traditional Chinese medicine, pu’erh is valued for clearing “dampness” and “heat”, leading to internal balance and harmony.',
+  'Enjoyed during and after meals, pu’erh helps refresh the body after eating.',
+  'Taken in the morning or between meals, pu’erh is a gentle option leading to smooth and sustained awareness, with half the caffeine content of coffee.',
+];
+
 window.YUNA.products = [
   {
-    id: 'imperial-puerh',                      // canonical key — used by the cart + checkout function
+    id: 'imperial-puerh',
     name: "Imperial Pu'erh Tea",
     category: "Pu'erh Tea",
     url: 'product-imperial-puerh.html',
@@ -31,19 +35,13 @@ window.YUNA.products = [
       'assets/products/imperial-puerh-1.jpg',  // TODO: add real photo (missing files fall back to a placeholder)
     ],
 
-    shortDesc: 'TODO: one or two lines that sit next to the price — the quick pitch.',
-    longDesc:  'TODO: the full description for the "Description" tab.',
-    details: [
-      ['Form',    'TODO'],   // e.g. loose leaf / cake / tuo cha
-      ['Origin',  'TODO'],
-      ['Harvest', 'TODO'],
-    ],
-    brewing: 'TODO: brewing guidance — water temperature, leaf amount, steep times, infusions.',
+    pitch: 'Warming and balancing, our earthy Pu’erh tea is perfect for morning vitality or relieving afternoon fatigue.',
+    netWeight: '50g (2.5g × 20 tea bags)',
+    healthBenefits: PUERH_BENEFITS,
 
-    // Sizes. `key` must match the checkout function's price map + Netlify env vars.
     variants: [
-      { key: 'single', label: 'Single',   sub: '1 box',    price: 55  },
-      { key: 'pack3',  label: 'Set of 3', sub: '3 boxes',  price: 150 },
+      { key: 'single', label: 'Single',   sub: '1 box',   price: 55  },
+      { key: 'pack3',  label: 'Set of 3', sub: '3 boxes', price: 150 },
     ],
   },
 
@@ -57,14 +55,9 @@ window.YUNA.products = [
       'assets/products/imperial-puerh-goji-1.jpg', // TODO: add real photo
     ],
 
-    shortDesc: 'TODO: quick pitch for the goji blend.',
-    longDesc:  'TODO: full description — how the goji berries round out the pu\'erh.',
-    details: [
-      ['Form',   'TODO'],
-      ['Blend',  'TODO'],   // e.g. pu'erh + goji berry
-      ['Origin', 'TODO'],
-    ],
-    brewing: 'TODO: brewing guidance for the goji blend.',
+    pitch: 'Warming and balancing, our blend of earthy Pu’erh tea with dried goji is perfect for morning vitality or relieving afternoon fatigue.',
+    netWeight: '50g (2.5g × 20 tea bags)',
+    healthBenefits: PUERH_BENEFITS,
 
     variants: [
       { key: 'single', label: 'Single',   sub: '1 box',   price: 55  },
@@ -73,13 +66,11 @@ window.YUNA.products = [
   },
 ];
 
-// Convenience lookups.
 window.YUNA.productById = window.YUNA.products.reduce(function (map, p) {
   map[p.id] = p;
   return map;
 }, {});
 
-// Resolve a variant object for a product id + variant key (falls back to first variant).
 window.YUNA.getVariant = function (id, variantKey) {
   var p = window.YUNA.productById[id];
   if (!p) return null;

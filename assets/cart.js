@@ -313,8 +313,18 @@
     setText('#pdp-breadcrumb-name', p.name);
     setText('#pdp-cat', p.category);
     setText('#pdp-title', p.name);
-    setText('#pdp-short', p.shortDesc);
+    setText('#pdp-short', p.pitch);
+    setText('#pdp-netweight', p.netWeight);
     setText('#pdp-category', p.category);
+
+    var healthEl = document.querySelector('#pdp-health');
+    if (healthEl) {
+      var benefits = (p.healthBenefits || []);
+      healthEl.innerHTML = benefits.length
+        ? '<div class="rule"></div><h3 class="benefits-title">Health Benefits</h3><ul class="benefits">' +
+            benefits.map(function (b) { return '<li>' + escapeHtml(b) + '</li>'; }).join('') + '</ul>'
+        : '';
+    }
 
     // size selector
     var variantsEl = document.querySelector('#pdp-variants');
@@ -346,16 +356,6 @@
         });
       } else { thumbs.style.display = 'none'; }
     }
-
-    // tabs content
-    setText('#tab-description', p.longDesc);
-    var detailsEl = document.querySelector('#tab-details');
-    if (detailsEl) {
-      detailsEl.innerHTML = '<table><tbody>' + (p.details || []).map(function (row) {
-        return '<tr><td>' + escapeHtml(row[0]) + '</td><td>' + escapeHtml(row[1]) + '</td></tr>';
-      }).join('') + '</tbody></table>';
-    }
-    setText('#tab-brewing', p.brewing);
 
     // related (the other product)
     var related = document.querySelector('#pdp-related');
