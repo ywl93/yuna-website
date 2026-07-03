@@ -37,7 +37,7 @@ window.YUNA.products = [
     ],
 
     pitch: 'Warming and balancing, our earthy Pu’erh tea is perfect for morning vitality or relieving afternoon fatigue.',
-    netWeight: '50g (2.5g × 20 tea bags)',
+    netWeight: '40g (2g × 20 tea bags)',
     healthBenefits: PUERH_BENEFITS,
 
     variants: [
