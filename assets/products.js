@@ -52,7 +52,8 @@ window.YUNA.products = [
     url: 'product-imperial-puerh-goji.html',
 
     images: [
-      'assets/products/imperial-puerh-goji-1.jpg', // TODO: add real photo
+      'assets/products/imperial-puerh-goji-1.jpg', // packaging: box + sachet
+      'assets/products/imperial-puerh-goji-2.jpg', // brewed cup
     ],
 
     pitch: 'Warming and balancing, our blend of earthy Pu’erh tea with dried goji is perfect for morning vitality or relieving afternoon fatigue.',
