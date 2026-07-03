@@ -1,24 +1,28 @@
 /* =============================================================================
    Yúna Tea — Stripe Checkout session creator (Netlify Function)
    -----------------------------------------------------------------------------
-   The browser cart POSTs { items: [{ id, qty }] } here. This function is the
-   ONLY place that decides what a customer pays: it maps each product id to a
-   Stripe Price ID (configured in the Stripe Dashboard) and never trusts a
-   price from the browser.
+   The browser cart POSTs { items: [{ id, variant, qty }] } here. This function
+   is the ONLY place that decides what a customer pays: it maps each
+   product+variant to a Stripe Price ID (configured in the Stripe Dashboard) and
+   never trusts a price from the browser.
 
-   Required environment variables (set these in Netlify → Site settings →
+   Required environment variables (set in Netlify → Site configuration →
    Environment variables — see SETUP.md):
-     STRIPE_SECRET_KEY                  your Stripe secret key (sk_test_… / sk_live_…)
-     STRIPE_PRICE_IMPERIAL_PUERH        Price ID for "Imperial Pu'erh Tea"
-     STRIPE_PRICE_IMPERIAL_PUERH_GOJI   Price ID for "Imperial Pu'erh Tea with Goji"
+     STRIPE_SECRET_KEY                 your Stripe secret key (sk_test_… / sk_live_…)
+     STRIPE_PRICE_PUERH_SINGLE        Price ID — Imperial Pu'erh Tea, Single
+     STRIPE_PRICE_PUERH_PACK3         Price ID — Imperial Pu'erh Tea, Set of 3
+     STRIPE_PRICE_PUERH_GOJI_SINGLE   Price ID — Imperial Pu'erh Tea with Goji, Single
+     STRIPE_PRICE_PUERH_GOJI_PACK3    Price ID — Imperial Pu'erh Tea with Goji, Set of 3
    ========================================================================== */
 
 const Stripe = require('stripe');
 
-// product id (from assets/products.js)  ->  Stripe Price ID (from env)
+// "<product id>:<variant key>"  ->  Stripe Price ID (from env)
 const PRICE_IDS = {
-  'imperial-puerh': process.env.STRIPE_PRICE_IMPERIAL_PUERH,
-  'imperial-puerh-goji': process.env.STRIPE_PRICE_IMPERIAL_PUERH_GOJI,
+  'imperial-puerh:single':      process.env.STRIPE_PRICE_PUERH_SINGLE,
+  'imperial-puerh:pack3':       process.env.STRIPE_PRICE_PUERH_PACK3,
+  'imperial-puerh-goji:single': process.env.STRIPE_PRICE_PUERH_GOJI_SINGLE,
+  'imperial-puerh-goji:pack3':  process.env.STRIPE_PRICE_PUERH_GOJI_PACK3,
 };
 
 // TODO (shipping): countries you ship to. Trim/expand as needed.
@@ -43,7 +47,6 @@ exports.handler = async (event) => {
   }
   const stripe = Stripe(secret);
 
-  // Parse the cart
   let items;
   try {
     items = JSON.parse(event.body || '{}').items;
@@ -57,7 +60,8 @@ exports.handler = async (event) => {
   // Build line items from trusted server-side Price IDs
   const line_items = [];
   for (const it of items) {
-    const priceId = PRICE_IDS[it && it.id];
+    const key = (it && it.id) + ':' + (it && it.variant);
+    const priceId = PRICE_IDS[key];
     let qty = parseInt(it && it.qty, 10);
     if (isNaN(qty) || qty < 1) qty = 1;
     if (qty > 99) qty = 99;
@@ -70,7 +74,6 @@ exports.handler = async (event) => {
     line_items.push({ price: priceId, quantity: qty });
   }
 
-  // Where to send the customer back to
   const origin =
     event.headers.origin ||
     process.env.URL ||
@@ -83,18 +86,11 @@ exports.handler = async (event) => {
       line_items,
       success_url: origin + '/order-confirmed.html?session_id={CHECKOUT_SESSION_ID}',
       cancel_url: origin + '/checkout-cancelled.html',
-      // Collect a shipping address for physical goods
       shipping_address_collection: { allowed_countries: SHIP_TO },
       phone_number_collection: { enabled: true },
       billing_address_collection: 'auto',
       allow_promotion_codes: true,
-
-      // TODO (shipping rates): to charge shipping, create a Shipping Rate in the
-      // Stripe Dashboard and reference it here, e.g.:
-      // shipping_options: [{ shipping_rate: 'shr_xxx' }],
-
-      // Payment methods (card, Apple/Google Pay, Alipay, WeChat Pay) are taken
-      // from what you enable in the Stripe Dashboard — no need to list them here.
+      // TODO (shipping rates): shipping_options: [{ shipping_rate: 'shr_xxx' }],
     });
 
     return json(200, { url: session.url });

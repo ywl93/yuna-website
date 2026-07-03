@@ -71,8 +71,12 @@ In **Netlify → your site → Site configuration → Environment variables**, a
 | Key | Value |
 |-----|-------|
 | `STRIPE_SECRET_KEY` | your `sk_test_...` (later `sk_live_...`) |
-| `STRIPE_PRICE_IMPERIAL_PUERH` | the Price ID for Imperial Pu'erh Tea |
-| `STRIPE_PRICE_IMPERIAL_PUERH_GOJI` | the Price ID for the Goji blend |
+| `STRIPE_PRICE_PUERH_SINGLE` | Price ID — Imperial Pu'erh Tea, **Single** |
+| `STRIPE_PRICE_PUERH_PACK3` | Price ID — Imperial Pu'erh Tea, **Set of 3** |
+| `STRIPE_PRICE_PUERH_GOJI_SINGLE` | Price ID — Imperial Pu'erh Tea with Goji, **Single** |
+| `STRIPE_PRICE_PUERH_GOJI_PACK3` | Price ID — Imperial Pu'erh Tea with Goji, **Set of 3** |
+
+> Each tea is sold in two sizes, so there are **four** products/prices (2 teas × Single/Set of 3).
 
 (Never put the secret key in the HTML/JS — it belongs only in these env vars,
 which is why checkout runs through the serverless function.)

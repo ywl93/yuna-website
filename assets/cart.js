@@ -2,31 +2,28 @@
    Yúna Tea — cart engine (classic script, no build step)
    Depends on assets/products.js (loaded first). Exposes window.YUNA.cart.
 
-   Responsibilities:
-     - cart state in localStorage  (items: [{ id, qty }])
-     - header cart-count badge
-     - slide-in cart drawer (injected into every page automatically)
-     - add-to-cart + quantity-stepper wiring via data-attributes
-     - render the home product grid, the product pages, and the cart page
-     - checkout() -> POST to the Netlify function -> redirect to Stripe
+   Each tea is sold in sizes ("variants": single / pack3). A cart line is
+   identified by product id + variant. Storage shape: [{ id, variant, qty }].
    ========================================================================== */
 (function () {
   'use strict';
 
   var YUNA = window.YUNA = window.YUNA || {};
-  var STORAGE_KEY = 'yuna_cart_v1';
+  var STORAGE_KEY = 'yuna_cart_v2';           // v2: items now carry a variant
   var PLACEHOLDER = 'assets/products/placeholder.svg';
   var CHECKOUT_ENDPOINT = '/.netlify/functions/create-checkout';
 
   /* ---------- helpers ------------------------------------------------------ */
 
   function productById(id) { return YUNA.productById ? YUNA.productById[id] : null; }
+  function getVariant(id, vkey) { return YUNA.getVariant ? YUNA.getVariant(id, vkey) : null; }
+  function lineKey(id, variant) { return id + '|' + variant; }
+  function firstVariantKey(p) { return (p && p.variants && p.variants[0]) ? p.variants[0].key : 'single'; }
 
   function firstImage(p) {
     return (p && p.images && p.images[0]) ? p.images[0] : PLACEHOLDER;
   }
 
-  // <img> with graceful fallback to the placeholder if the file is missing.
   function imgTag(src, alt, cls) {
     var c = cls ? ' class="' + cls + '"' : '';
     return '<img' + c + ' src="' + (src || PLACEHOLDER) + '" alt="' + escapeAttr(alt || '') +
@@ -44,9 +41,13 @@
     }
   }
 
-  function priceLabel(p) {
-    var m = p ? money(p.price) : null;
-    return m || 'Price on request';
+  // Lowest variant price for a product, e.g. "From HK$55".
+  function fromPriceLabel(p) {
+    var prices = (p.variants || []).map(function (v) { return v.price; })
+      .filter(function (n) { return typeof n === 'number'; });
+    if (!prices.length) return 'Price on request';
+    var min = Math.min.apply(null, prices);
+    return (p.variants.length > 1 ? 'From ' : '') + money(min);
   }
 
   function escapeHtml(s) {
@@ -61,10 +62,12 @@
     try {
       var raw = localStorage.getItem(STORAGE_KEY);
       var arr = raw ? JSON.parse(raw) : [];
-      return Array.isArray(arr) ? arr.filter(function (i) { return i && productById(i.id); }) : [];
+      return Array.isArray(arr) ? arr.filter(function (i) {
+        return i && productById(i.id) && getVariant(i.id, i.variant);
+      }) : [];
     } catch (e) { return []; }
   }
-  function write(items) {
+  function writeItems(items) {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); } catch (e) {}
     refresh();
   }
@@ -81,30 +84,35 @@
     count: function () {
       return read().reduce(function (n, i) { return n + clampQty(i.qty); }, 0);
     },
-    add: function (id, qty) {
-      if (!productById(id)) return;
+    add: function (id, variant, qty) {
+      var p = productById(id);
+      if (!p) return;
+      if (!getVariant(id, variant)) variant = firstVariantKey(p);
       var items = read();
-      var found = items.filter(function (i) { return i.id === id; })[0];
+      var found = items.filter(function (i) { return i.id === id && i.variant === variant; })[0];
       if (found) found.qty = clampQty(found.qty + (qty || 1));
-      else items.push({ id: id, qty: clampQty(qty || 1) });
-      write(items);
+      else items.push({ id: id, variant: variant, qty: clampQty(qty || 1) });
+      writeItems(items);
     },
-    setQty: function (id, qty) {
+    setQtyByKey: function (key, qty) {
       var items = read().map(function (i) {
-        return i.id === id ? { id: id, qty: clampQty(qty) } : i;
+        return lineKey(i.id, i.variant) === key ? { id: i.id, variant: i.variant, qty: clampQty(qty) } : i;
       });
-      write(items);
+      writeItems(items);
     },
-    remove: function (id) {
-      write(read().filter(function (i) { return i.id !== id; }));
+    removeByKey: function (key) {
+      writeItems(read().filter(function (i) { return lineKey(i.id, i.variant) !== key; }));
     },
-    clear: function () { write([]); },
+    qtyByKey: function (key) {
+      var it = read().filter(function (i) { return lineKey(i.id, i.variant) === key; })[0];
+      return it ? clampQty(it.qty) : 1;
+    },
+    clear: function () { writeItems([]); },
     subtotal: function () {
-      // Returns { amount, hasUnpriced }. amount is null if nothing is priced.
       var amount = 0, hasUnpriced = false, any = false;
       read().forEach(function (i) {
-        var p = productById(i.id);
-        if (p && typeof p.price === 'number') { amount += p.price * clampQty(i.qty); any = true; }
+        var v = getVariant(i.id, i.variant);
+        if (v && typeof v.price === 'number') { amount += v.price * clampQty(i.qty); any = true; }
         else hasUnpriced = true;
       });
       return { amount: any ? amount : null, hasUnpriced: hasUnpriced };
@@ -151,27 +159,30 @@
     document.body.appendChild(drawer);
   }
 
-  function lineHtml(item, opts) {
+  function lineHtml(item) {
     var p = productById(item.id);
-    if (!p) return '';
+    var v = getVariant(item.id, item.variant);
+    if (!p || !v) return '';
+    var key = lineKey(item.id, item.variant);
     var qty = clampQty(item.qty);
-    var line = (typeof p.price === 'number') ? money(p.price * qty) : priceLabel(p);
+    var lineTotal = (typeof v.price === 'number') ? money(v.price * qty) : 'Price on request';
+    var unit = (typeof v.price === 'number') ? money(v.price) : 'Price on request';
     return '' +
-      '<div class="cart-line" data-line="' + escapeAttr(p.id) + '">' +
+      '<div class="cart-line" data-line="' + escapeAttr(key) + '">' +
         '<a href="' + escapeAttr(p.url) + '">' + imgTag(firstImage(p), p.name) + '</a>' +
         '<div>' +
           '<a class="cl-name" href="' + escapeAttr(p.url) + '">' + escapeHtml(p.name) + '</a>' +
-          '<div class="cl-price">' + escapeHtml(priceLabel(p)) + '</div>' +
+          '<div class="cl-variant">' + escapeHtml(v.label) + ' · ' + escapeHtml(unit) + '</div>' +
           '<div class="cl-controls">' +
             '<span class="cl-qty">' +
-              '<button data-line-dec="' + escapeAttr(p.id) + '" aria-label="Decrease quantity">&minus;</button>' +
+              '<button data-line-dec="' + escapeAttr(key) + '" aria-label="Decrease quantity">&minus;</button>' +
               '<span>' + qty + '</span>' +
-              '<button data-line-inc="' + escapeAttr(p.id) + '" aria-label="Increase quantity">+</button>' +
+              '<button data-line-inc="' + escapeAttr(key) + '" aria-label="Increase quantity">+</button>' +
             '</span>' +
-            '<button class="cl-remove" data-line-remove="' + escapeAttr(p.id) + '">Remove</button>' +
+            '<button class="cl-remove" data-line-remove="' + escapeAttr(key) + '">Remove</button>' +
           '</div>' +
         '</div>' +
-        '<div class="cl-linetotal">' + escapeHtml(line) + '</div>' +
+        '<div class="cl-linetotal">' + escapeHtml(lineTotal) + '</div>' +
       '</div>';
   }
 
@@ -226,7 +237,9 @@
   }
 
   function checkout(btn) {
-    var items = cart.items().map(function (i) { return { id: i.id, qty: clampQty(i.qty) }; });
+    var items = cart.items().map(function (i) {
+      return { id: i.id, variant: i.variant, qty: clampQty(i.qty) };
+    });
     if (!items.length) { setCheckoutError('Your cart is empty.'); return; }
     setCheckoutError('');
     var buttons = document.querySelectorAll('[data-checkout]');
@@ -267,10 +280,10 @@
           '<div class="card-body">' +
             '<span class="card-cat">' + escapeHtml(p.category) + '</span>' +
             '<a class="card-name" href="' + escapeAttr(p.url) + '">' + escapeHtml(p.name) + '</a>' +
-            '<span class="card-price">' + escapeHtml(priceLabel(p)) + '</span>' +
+            '<span class="card-price">' + escapeHtml(fromPriceLabel(p)) + '</span>' +
             '<div class="card-actions">' +
               '<a class="btn" href="' + escapeAttr(p.url) + '">View</a>' +
-              '<button class="btn solid" data-add="' + escapeAttr(p.id) + '">Add</button>' +
+              '<button class="btn solid" data-add="' + escapeAttr(p.id) + '" data-variant="' + escapeAttr(firstVariantKey(p)) + '">Add</button>' +
             '</div>' +
           '</div>' +
         '</div>';
@@ -278,6 +291,18 @@
   }
 
   /* ---------- renderers: product page ------------------------------------- */
+
+  function variantButtonsHtml(p) {
+    return (p.variants || []).map(function (v, i) {
+      var price = (typeof v.price === 'number') ? money(v.price) : 'TBC';
+      return '<button type="button" class="variant-opt' + (i === 0 ? ' active' : '') +
+        '" data-variant-opt="' + escapeAttr(v.key) + '">' +
+          '<span class="vo-label">' + escapeHtml(v.label) + '</span>' +
+          '<span class="vo-sub">' + escapeHtml(v.sub || '') + '</span>' +
+          '<span class="vo-price">' + escapeHtml(price) + '</span>' +
+        '</button>';
+    }).join('');
+  }
 
   function renderProductPage() {
     var id = document.body.getAttribute('data-product');
@@ -289,17 +314,21 @@
     setText('#pdp-breadcrumb-name', p.name);
     setText('#pdp-cat', p.category);
     setText('#pdp-title', p.name);
-    setText('#pdp-price', priceLabel(p));
     setText('#pdp-short', p.shortDesc);
-    setText('#pdp-sku', p.sku);
     setText('#pdp-category', p.category);
+
+    // size selector
+    var variantsEl = document.querySelector('#pdp-variants');
+    if (variantsEl) variantsEl.innerHTML = variantButtonsHtml(p);
+
+    var firstV = (p.variants && p.variants[0]) || null;
+    setPdpSelectedVariant(id, firstV ? firstV.key : 'single');
 
     // gallery
     var imgs = (p.images && p.images.length) ? p.images : [PLACEHOLDER];
     var main = document.querySelector('#pdp-gallery-main');
     if (main) {
-      main.src = imgs[0];
-      main.alt = p.name;
+      main.src = imgs[0]; main.alt = p.name;
       main.onerror = function () { this.onerror = null; this.src = PLACEHOLDER; };
     }
     var thumbs = document.querySelector('#pdp-thumbs');
@@ -316,9 +345,7 @@
           thumbs.querySelectorAll('img').forEach(function (im) { im.classList.remove('active'); });
           t.classList.add('active');
         });
-      } else {
-        thumbs.style.display = 'none';
-      }
+      } else { thumbs.style.display = 'none'; }
     }
 
     // tabs content
@@ -330,10 +357,6 @@
       }).join('') + '</tbody></table>';
     }
     setText('#tab-brewing', p.brewing);
-
-    // add-to-cart button id
-    var addBtn = document.querySelector('#pdp-add');
-    if (addBtn) addBtn.setAttribute('data-add', p.id);
 
     // related (the other product)
     var related = document.querySelector('#pdp-related');
@@ -348,13 +371,25 @@
               '<div class="card-body">' +
                 '<span class="card-cat">' + escapeHtml(other.category) + '</span>' +
                 '<a class="card-name" href="' + escapeAttr(other.url) + '">' + escapeHtml(other.name) + '</a>' +
-                '<span class="card-price">' + escapeHtml(priceLabel(other)) + '</span>' +
+                '<span class="card-price">' + escapeHtml(fromPriceLabel(other)) + '</span>' +
                 '<div class="card-actions"><a class="btn" href="' + escapeAttr(other.url) + '">View</a></div>' +
               '</div>' +
             '</div>' +
           '</div>';
       }
     }
+  }
+
+  // Update the product page's selected size: highlight, price, and the add button's variant.
+  function setPdpSelectedVariant(id, vkey) {
+    var v = getVariant(id, vkey);
+    if (!v) return;
+    document.querySelectorAll('#pdp-variants [data-variant-opt]').forEach(function (b) {
+      b.classList.toggle('active', b.getAttribute('data-variant-opt') === vkey);
+    });
+    setText('#pdp-price', (typeof v.price === 'number') ? money(v.price) : 'Price on request');
+    var addBtn = document.querySelector('#pdp-add');
+    if (addBtn) { addBtn.setAttribute('data-add', id); addBtn.setAttribute('data-variant', vkey); }
   }
 
   /* ---------- renderers: cart page ---------------------------------------- */
@@ -393,6 +428,15 @@
   document.addEventListener('click', function (e) {
     var t = e.target;
 
+    // product-page size selector
+    var vopt = t.closest('[data-variant-opt]');
+    if (vopt) {
+      var id = document.body.getAttribute('data-product');
+      if (id) setPdpSelectedVariant(id, vopt.getAttribute('data-variant-opt'));
+      return;
+    }
+
+    // description tabs
     var tab = t.closest('[data-tab]');
     if (tab) {
       var name = tab.getAttribute('data-tab');
@@ -405,33 +449,32 @@
     }
 
     var add = t.closest('[data-add]');
-    if (add) { cart.add(add.getAttribute('data-add'), qtyFromScope(add)); openCart(); return; }
+    if (add) {
+      cart.add(add.getAttribute('data-add'), add.getAttribute('data-variant'), qtyFromScope(add));
+      openCart();
+      return;
+    }
 
     if (t.closest('[data-open-cart]')) { e.preventDefault(); openCart(); return; }
     if (t.closest('[data-close-cart]')) { closeCart(); return; }
     if (t.closest('[data-checkout]')) { checkout(t.closest('[data-checkout]')); return; }
 
     var dec = t.closest('[data-qty-dec]');
-    if (dec) { var s1 = dec.closest('.qty'); var i1 = s1 && s1.querySelector('[data-qty-input]'); if (i1) i1.value = clampQty(i1.value) - 1 < 1 ? 1 : clampQty(i1.value) - 1; return; }
+    if (dec) { var s1 = dec.closest('.qty'); var i1 = s1 && s1.querySelector('[data-qty-input]'); if (i1) i1.value = Math.max(1, clampQty(i1.value) - 1); return; }
     var inc = t.closest('[data-qty-inc]');
     if (inc) { var s2 = inc.closest('.qty'); var i2 = s2 && s2.querySelector('[data-qty-input]'); if (i2) i2.value = clampQty(i2.value) + 1; return; }
 
     var ldec = t.closest('[data-line-dec]');
-    if (ldec) { var idd = ldec.getAttribute('data-line-dec'); var cur = cartQty(idd); cart.setQty(idd, cur - 1 < 1 ? 1 : cur - 1); return; }
+    if (ldec) { var kd = ldec.getAttribute('data-line-dec'); cart.setQtyByKey(kd, Math.max(1, cart.qtyByKey(kd) - 1)); return; }
     var linc = t.closest('[data-line-inc]');
-    if (linc) { var idi = linc.getAttribute('data-line-inc'); cart.setQty(idi, cartQty(idi) + 1); return; }
+    if (linc) { var ki = linc.getAttribute('data-line-inc'); cart.setQtyByKey(ki, cart.qtyByKey(ki) + 1); return; }
     var lrem = t.closest('[data-line-remove]');
-    if (lrem) { cart.remove(lrem.getAttribute('data-line-remove')); return; }
+    if (lrem) { cart.removeByKey(lrem.getAttribute('data-line-remove')); return; }
   });
 
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') closeCart();
   });
-
-  function cartQty(id) {
-    var it = cart.items().filter(function (i) { return i.id === id; })[0];
-    return it ? clampQty(it.qty) : 1;
-  }
 
   /* ---------- init --------------------------------------------------------- */
 
