@@ -41,13 +41,11 @@
     }
   }
 
-  // Lowest variant price for a product, e.g. "From HK$55".
+  // Per-box price for the card, e.g. "HK$55 per box" (first/single variant).
   function fromPriceLabel(p) {
-    var prices = (p.variants || []).map(function (v) { return v.price; })
-      .filter(function (n) { return typeof n === 'number'; });
-    if (!prices.length) return 'Price on request';
-    var min = Math.min.apply(null, prices);
-    return (p.variants.length > 1 ? 'From ' : '') + money(min);
+    var v = (p.variants && p.variants[0]);
+    if (!v || typeof v.price !== 'number') return 'Price on request';
+    return money(v.price) + ' per box';
   }
 
   function escapeHtml(s) {
