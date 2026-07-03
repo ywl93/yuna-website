@@ -1,0 +1,17 @@
+# Netlify configuration for the Yúna Tea static store + checkout function.
+
+[build]
+  # The site is plain static files at the repo root — nothing to compile.
+  publish = "."
+  functions = "netlify/functions"
+
+[functions]
+  # Bundle the function (and its `stripe` dependency) with esbuild.
+  node_bundler = "esbuild"
+
+# Friendly path for the checkout endpoint (the front-end already calls the
+# default /.netlify/functions/ path, so this is just a convenience alias).
+[[redirects]]
+  from = "/api/create-checkout"
+  to = "/.netlify/functions/create-checkout"
+  status = 200

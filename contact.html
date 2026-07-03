@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Yúna Tea — Contact</title>
+  <meta name="description" content="Contact Yúna Tea for customized tea gifts and inquiries. Reach us via phone, WhatsApp, WeChat, or email at sales@yuna-tea.com." />
+  <link rel="icon" type="image/png" href="yunatealogo.png" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Yúna Tea — Contact" />
+  <meta property="og:description" content="Contact Yúna Tea for customized tea gifts. Reach us via phone, WhatsApp, WeChat, or email." />
+  <meta property="og:image" content="https://yuna-tea.com/yunatealogo.png" />
+  <meta property="og:url" content="https://yuna-tea.com/contact.html" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Jost:wght@200;300;400&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --sand:    #f5f0e8;
+      --linen:   #ede5d5;
+      --bark:    #7a5c42;
+      --earth:   #4a3728;
+      --warm:    #c8a882;
+      --goji:    #b85c3a;
+      --mist:    rgba(245,240,232,0.7);
+    }
+
+    html, body {
+      min-height: 100%;
+      background: var(--sand);
+      color: var(--earth);
+      font-family: 'Jost', sans-serif;
+      font-weight: 400;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        radial-gradient(ellipse 80% 60% at 50% 110%, rgba(122,92,66,0.13) 0%, transparent 70%),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .mountains {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 38%;
+      z-index: 0;
+      opacity: 0.13;
+      pointer-events: none;
+    }
+    .mountain-back  { fill: var(--bark); }
+    .mountain-front { fill: var(--earth); opacity: 0.5; }
+
+    .back {
+      position: fixed;
+      top: 28px; left: 32px;
+      z-index: 2;
+      font-size: 0.7rem;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--bark);
+      text-decoration: none;
+      opacity: 0;
+      animation: rise 1s ease 0.2s forwards;
+    }
+    .back::before {
+      content: '←';
+      margin-right: 8px;
+      transition: transform 0.3s ease;
+      display: inline-block;
+    }
+    .back:hover::before { transform: translateX(-4px); }
+
+    .stage {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 6rem 2rem 5rem;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 28px;
+      opacity: 0;
+      animation: rise 1s ease 0.35s forwards;
+    }
+    .divider-line {
+      width: 60px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--warm));
+    }
+    .divider-line.right {
+      background: linear-gradient(90deg, var(--warm), transparent);
+    }
+    .divider-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--goji);
+      opacity: 0.7;
+    }
+
+    .subtitle {
+      margin-top: 18px;
+      font-size: clamp(0.78rem, 1.6vw, 0.92rem);
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--bark);
+      opacity: 0;
+      animation: rise 1s ease 0.7s forwards;
+      text-align: center;
+    }
+
+    .contacts {
+      width: 100%;
+      max-width: 440px;
+      margin-top: 48px;
+      opacity: 0;
+      animation: rise 1s ease 0.85s forwards;
+    }
+    .contact-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(200,168,130,0.25);
+    }
+    .contact-row:last-child { border-bottom: none; }
+    .contact-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--bark);
+      flex-shrink: 0;
+    }
+    .contact-value {
+      font-family: 'Jost', sans-serif;
+      font-weight: 400;
+      font-size: 1rem;
+      color: var(--earth);
+      text-decoration: none;
+      text-align: right;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.3s ease, color 0.3s ease;
+    }
+    a.contact-value:hover {
+      border-bottom-color: var(--bark);
+    }
+    .contact-value.placeholder {
+      font-style: italic;
+      opacity: 0.55;
+    }
+
+    .or-divider {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      width: 100%;
+      max-width: 440px;
+      margin-top: 44px;
+      opacity: 0;
+      animation: rise 1s ease 1s forwards;
+    }
+    .or-line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--warm), transparent);
+    }
+    .or-text {
+      font-size: 0.65rem;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--bark);
+      white-space: nowrap;
+    }
+
+    .form-wrap {
+      width: 100%;
+      max-width: 440px;
+      margin-top: 32px;
+      opacity: 0;
+      animation: rise 1.1s ease 1.15s forwards;
+    }
+
+    .field {
+      margin-bottom: 32px;
+      position: relative;
+    }
+
+    label {
+      display: block;
+      font-size: 0.65rem;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--bark);
+      margin-bottom: 10px;
+    }
+
+    input, textarea {
+      width: 100%;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--warm);
+      padding: 8px 2px;
+      font-family: 'Jost', sans-serif;
+      font-weight: 400;
+      font-size: 1.05rem;
+      color: var(--earth);
+      outline: none;
+      transition: border-color 0.3s ease;
+      resize: none;
+    }
+    textarea {
+      min-height: 110px;
+      line-height: 1.5;
+    }
+    input:focus, textarea:focus {
+      border-bottom-color: var(--bark);
+    }
+    input::placeholder, textarea::placeholder {
+      color: rgba(122,92,66,0.35);
+      font-weight: 300;
+    }
+
+    .honeypot {
+      position: absolute;
+      left: -9999px;
+      visibility: hidden;
+    }
+
+    .submit {
+      margin-top: 16px;
+      padding: 12px 36px;
+      border: 1px solid var(--warm);
+      border-radius: 2px;
+      background: rgba(245,240,232,0.6);
+      backdrop-filter: blur(4px);
+      font-family: 'Jost', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 400;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--bark);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .submit:hover {
+      background: var(--bark);
+      color: var(--sand);
+      border-color: var(--bark);
+    }
+    .submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .thank-you {
+      display: none;
+      text-align: center;
+      padding: 40px 0;
+      animation: rise 0.9s ease forwards;
+    }
+    .thank-you.visible { display: block; }
+    .thank-you .mark {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-weight: 300;
+      font-size: 1.8rem;
+      color: var(--bark);
+      margin-bottom: 14px;
+    }
+    .thank-you .text {
+      font-size: 0.92rem;
+      letter-spacing: 0.04em;
+      color: var(--earth);
+      line-height: 1.6;
+    }
+
+    .error {
+      display: none;
+      margin-top: 18px;
+      text-align: center;
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      color: var(--goji);
+    }
+    .error.visible { display: block; }
+    .error a {
+      color: inherit;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .origin {
+      position: fixed;
+      bottom: 28px;
+      left: 0; right: 0;
+      text-align: center;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--bark);
+      opacity: 0;
+      animation: rise 1s ease 1.1s forwards;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* — Respect reduced-motion preferences — */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+      .back, .divider, .subtitle, .contacts, .or-divider, .form-wrap, .origin {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .back { top: 18px; left: 20px; }
+      .stage { padding: 5rem 1.5rem 4.5rem; }
+      .form-wrap { margin-top: 40px; }
+      .origin { bottom: 18px; }
+    }
+  </style>
+</head>
+<body>
+
+  <svg class="mountains" viewBox="0 0 1440 320" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path class="mountain-back" d="M0,320 L0,220 Q80,160 160,200 Q240,240 320,170 Q400,100 480,150 Q560,200 640,120 Q720,40 800,100 Q880,160 960,80 Q1040,0 1120,60 Q1200,120 1280,90 Q1360,60 1440,100 L1440,320 Z"/>
+    <path class="mountain-front" d="M0,320 L0,260 Q100,200 200,240 Q300,280 400,210 Q500,140 600,200 Q700,260 800,180 Q900,100 1000,160 Q1100,220 1200,170 Q1320,120 1440,160 L1440,320 Z"/>
+  </svg>
+
+  <a class="back" href="index.html">Home</a>
+
+  <div class="stage">
+
+    <div class="divider">
+      <span class="divider-line"></span>
+      <span class="divider-dot"></span>
+      <span class="divider-line right"></span>
+    </div>
+
+    <p class="subtitle">Contact us for customized tea gifts</p>
+
+    <!--
+      Contact methods — all filled in as of 2026-05-18.
+      Phone / WhatsApp: +852 6228 1196   (HK number; tel: link works tap-to-call; WhatsApp users can copy/paste)
+      WeChat:           zyyydwpq
+      Email:            sales@yuna-tea.com
+    -->
+    <div class="contacts">
+      <div class="contact-row">
+        <span class="contact-label">Phone / WhatsApp</span>
+        <a class="contact-value" href="tel:+85262281196">+852 6228 1196</a>
+      </div>
+      <div class="contact-row">
+        <span class="contact-label">WeChat</span>
+        <span class="contact-value">zyyydwpq</span>
+      </div>
+      <div class="contact-row">
+        <span class="contact-label">Email</span>
+        <a class="contact-value" href="mailto:sales@yuna-tea.com">sales@yuna-tea.com</a>
+      </div>
+    </div>
+
+    <div class="or-divider">
+      <span class="or-line"></span>
+      <span class="or-text">or send a message</span>
+      <span class="or-line"></span>
+    </div>
+
+    <div class="form-wrap">
+      <form id="contact-form" name="contact" method="POST" data-netlify="true" data-netlify-honeypot="bot-field">
+        <input type="hidden" name="form-name" value="contact" />
+        <input type="hidden" name="subject" value="New message via yuna-tea.com contact form" />
+        <p class="honeypot">
+          <label>Don't fill this out: <input name="bot-field" /></label>
+        </p>
+
+        <div class="field">
+          <label for="name">Name</label>
+          <input id="name" name="name" type="text" required placeholder="Your name" />
+        </div>
+
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" required placeholder="you@example.com" />
+        </div>
+
+        <div class="field">
+          <label for="message">Message</label>
+          <textarea id="message" name="message" required placeholder="Tell us what's on your mind"></textarea>
+        </div>
+
+        <div style="text-align: center;">
+          <button type="submit" class="submit">Send</button>
+        </div>
+
+        <p class="error" id="error">Something went wrong. Please try again, or email us at <a href="mailto:sales@yuna-tea.com">sales@yuna-tea.com</a>.</p>
+      </form>
+
+      <div class="thank-you" id="thank-you">
+        <p class="mark">Thank you.</p>
+        <p class="text">Your message is steeping.<br/>We'll be in touch soon.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <p class="origin">yuna-tea.com</p>
+
+  <script>
+    const form = document.getElementById('contact-form');
+    const thankYou = document.getElementById('thank-you');
+    const errorMsg = document.getElementById('error');
+    const submitBtn = form.querySelector('.submit');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorMsg.classList.remove('visible');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending';
+
+      try {
+        const formData = new FormData(form);
+        const body = new URLSearchParams(formData).toString();
+        const res = await fetch('/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body
+        });
+        if (!res.ok) throw new Error('Submit failed: ' + res.status);
+        form.style.display = 'none';
+        thankYou.classList.add('visible');
+      } catch (err) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send';
+        errorMsg.classList.add('visible');
+      }
+    });
+  </script>
+
+</body>
+</html>

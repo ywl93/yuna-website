@@ -1,0 +1,17 @@
+# Dependencies (Netlify installs these during build)
+node_modules/
+
+# Netlify local state
+.netlify/
+
+# Secrets / environment — NEVER commit Stripe keys
+.env
+.env.*
+!.env.example
+
+# Local-only Claude config
+.claude/settings.local.json
+
+# OS cruft
+.DS_Store
+Thumbs.db

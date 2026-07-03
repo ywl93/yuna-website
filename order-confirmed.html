@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Thank You — Yúna Tea</title>
+  <meta name="description" content="Thank you for your order." />
+  <meta name="robots" content="noindex" />
+  <link rel="icon" type="image/png" href="yunatealogo.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Jost:wght@200;300;400&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="assets/store.css" />
+</head>
+<body>
+
+  <svg class="mountains" viewBox="0 0 1440 320" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path class="mountain-back" d="M0,320 L0,220 Q80,160 160,200 Q240,240 320,170 Q400,100 480,150 Q560,200 640,120 Q720,40 800,100 Q880,160 960,80 Q1040,0 1120,60 Q1200,120 1280,90 Q1360,60 1440,100 L1440,320 Z"/>
+    <path class="mountain-front" d="M0,320 L0,260 Q100,200 200,240 Q300,280 400,210 Q500,140 600,200 Q700,260 800,180 Q900,100 1000,160 Q1100,220 1200,170 Q1320,120 1440,160 L1440,320 Z"/>
+  </svg>
+
+  <header class="site-header">
+    <a class="brand" href="index.html">Yúna</a>
+    <nav class="site-nav">
+      <a href="index.html">Shop</a>
+      <a href="contact.html">Contact</a>
+      <button class="cart-btn" data-open-cart aria-label="Open cart">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <span class="cart-count" hidden>0</span>
+      </button>
+    </nav>
+  </header>
+
+  <main class="message-page">
+    <div class="divider">
+      <span class="divider-line"></span>
+      <span class="divider-dot"></span>
+      <span class="divider-line right"></span>
+    </div>
+    <p class="mark">Thank you.</p>
+    <p class="text">Your order is confirmed and steeping. A receipt is on its way to your email. We'll be in touch about shipping — and if you have any questions, reach us anytime at <a href="mailto:sales@yuna-tea.com">sales@yuna-tea.com</a>.</p>
+    <a class="btn solid" href="index.html">Back to shop</a>
+  </main>
+
+  <footer class="site-footer">
+    <div class="foot-brand">Yúna Tea</div>
+    <div class="foot-links">
+      <a href="index.html">Shop</a><span class="foot-sep">·</span>
+      <a href="contact.html">Contact</a><span class="foot-sep">·</span>
+      <a href="mailto:sales@yuna-tea.com">sales@yuna-tea.com</a>
+    </div>
+  </footer>
+
+  <script src="assets/products.js"></script>
+  <script src="assets/cart.js"></script>
+  <script>
+    // Order placed — empty the cart so the badge resets.
+    if (window.YUNA && window.YUNA.cart) window.YUNA.cart.clear();
+  </script>
+</body>
+</html>
