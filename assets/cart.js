@@ -278,7 +278,6 @@
         '<div class="product-card">' +
           '<a href="' + escapeAttr(p.url) + '">' + imgTag(firstImage(p), p.name, 'thumb') + '</a>' +
           '<div class="card-body">' +
-            '<span class="card-cat">' + escapeHtml(p.category) + '</span>' +
             '<a class="card-name" href="' + escapeAttr(p.url) + '">' + escapeHtml(p.name) + '</a>' +
             '<span class="card-price">' + escapeHtml(fromPriceLabel(p)) + '</span>' +
             '<div class="card-actions">' +
@@ -369,7 +368,6 @@
             '<div class="product-card">' +
               '<a href="' + escapeAttr(other.url) + '">' + imgTag(firstImage(other), other.name, 'thumb') + '</a>' +
               '<div class="card-body">' +
-                '<span class="card-cat">' + escapeHtml(other.category) + '</span>' +
                 '<a class="card-name" href="' + escapeAttr(other.url) + '">' + escapeHtml(other.name) + '</a>' +
                 '<span class="card-price">' + escapeHtml(fromPriceLabel(other)) + '</span>' +
                 '<div class="card-actions"><a class="btn" href="' + escapeAttr(other.url) + '">View</a></div>' +

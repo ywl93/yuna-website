@@ -80,6 +80,8 @@ a { color: inherit; }
   border-bottom: 1px solid var(--line);
 }
 .site-header .brand {
+  display: inline-flex;
+  align-items: center;
   font-family: 'Cormorant Garamond', serif;
   font-weight: 300;
   font-size: 1.7rem;
@@ -87,6 +89,7 @@ a { color: inherit; }
   color: var(--earth);
   text-decoration: none;
 }
+.site-header .brand img { height: 36px; width: auto; display: block; }
 .site-nav {
   display: flex;
   align-items: center;
@@ -171,7 +174,7 @@ a { color: inherit; }
   align-items: center;
   justify-content: center;
   gap: 14px;
-  margin: 24px 0;
+  margin: 16px 0 4px;
 }
 .divider-line {
   width: 60px; height: 1px;
@@ -194,7 +197,7 @@ a { color: inherit; }
   position: relative;
   z-index: 1;
   text-align: center;
-  padding: 5rem 2rem 3.5rem;
+  padding: 2.4rem 2rem 1rem;
 }
 .hero .logo {
   height: 52px; width: auto;
@@ -205,19 +208,19 @@ a { color: inherit; }
 .hero .headline {
   font-family: 'Cormorant Garamond', serif;
   font-weight: 300;
-  font-size: clamp(2.3rem, 5.5vw, 3.6rem);
+  font-size: clamp(2rem, 4.6vw, 3.1rem);
   letter-spacing: 0.03em;
   line-height: 1.12;
   color: var(--earth);
-  margin-top: 20px;
+  margin-top: 0;
   opacity: 0; animation: rise 1.1s cubic-bezier(.22,1,.36,1) 0.3s forwards;
 }
 .hero .headline em { font-style: italic; color: var(--bark); }
 .hero .lede {
   max-width: 30rem;
-  margin: 18px auto 0;
-  font-size: 1rem;
-  line-height: 1.7;
+  margin: 14px auto 0;
+  font-size: 0.95rem;
+  line-height: 1.65;
   color: var(--bark);
   opacity: 0; animation: rise 1s ease 0.5s forwards;
 }
@@ -225,7 +228,7 @@ a { color: inherit; }
 /* =========================================================================
    Section heading
    ========================================================================= */
-.section { position: relative; z-index: 1; padding: 1rem 0 5rem; }
+.section { position: relative; z-index: 1; padding: 0 0 3rem; }
 .section-head { text-align: center; margin-bottom: 40px; }
 .section-head h2 {
   font-family: 'Cormorant Garamond', serif;
