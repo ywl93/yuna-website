@@ -81,19 +81,78 @@ In **Netlify → your site → Site configuration → Environment variables**, a
 (Never put the secret key in the HTML/JS — it belongs only in these env vars,
 which is why checkout runs through the serverless function.)
 
-## Step 5 — Turn on order emails (no code needed)
+## Step 5 — Turn on order emails
 
-You chose Stripe's built-in emails for launch:
+There are **two** separate emails: the receipt the customer gets, and the alert
+**you** get. They work differently.
 
-- **Customer receipt:** Stripe Dashboard → **Settings → Customer emails** → turn on
-  *"Successful payments"*. Stripe emails the buyer a receipt (from Stripe's own
-  verified servers — no DNS setup needed).
-- **You get notified of each order:** Dashboard → **Settings → Team and security →
-  Notifications** (or the Stripe mobile app) → enable *"Successful payments"* to
-  your email. You can point this at `sales@yuna-tea.com`.
+### 5a — Customer receipt (built-in Stripe, no code)
 
-That's the whole email flow for now. (A fully **branded** Yúna confirmation email
-is a later upgrade — see the end of this doc.)
+Dashboard → **Settings → Customer emails** → turn on *"Successful payments"*.
+Stripe emails the buyer a receipt from its own verified servers — no DNS setup
+needed.
+
+> **This receipt carries your Stripe account's branding, not the website's.**
+> The logo, sender name, and the *"contact us at … / call us at …"* footer come
+> from your **Stripe account settings**, *not* from anything in this repo. To fix
+> what a buyer sees:
+>
+> - **Logo & colours:** Settings → **Business → Branding** — upload the Yúna Tea
+>   **icon** (used at the top of the receipt) and **logo**, and set the brand
+>   colour.
+> - **Contact footer + sender name:** Settings → **Business → Business details**
+>   (public business information; direct link `dashboard.stripe.com/settings/public`)
+>   — set **Support email** to `sales@yuna-tea.com`, **Support phone** to
+>   `+852 6228 1196`, and the public **business name** to *Yúna Tea*. These render
+>   as the receipt's *"If you have any questions, contact us at … or call us at …"*
+>   line and the "Receipt from …" sender.
+
+### 5b — Your order alert → `sales@yuna-tea.com` (webhook, built in this repo)
+
+**Why not Stripe's built-in "notify me" toggle?** Those alerts go to your Stripe
+**login** email, and your single login owns **both** the Gaia Harvest and Yúna
+accounts — so it can't send Gaia orders to one inbox and Yúna orders to another.
+Instead, this repo ships a webhook function
+(`netlify/functions/order-notify.js`) that the **Yúna account** calls on every
+completed order and emails a formatted summary to whatever address you choose.
+(Gaia's site does the same to *its* address — that's the per-brand routing.)
+
+Set it up once:
+
+1. **Create a Resend account** at https://resend.com (free tier is plenty) and
+   **verify a sending domain — use a subdomain** so it never touches your existing
+   Microsoft 365 mail on `yuna-tea.com`:
+   - Resend → **Domains → Add** `send.yuna-tea.com`.
+   - Resend shows a handful of DNS records (a DKIM record on `resend._domainkey.send…`
+     plus an SPF/MX for the subdomain). Add them in **Netlify → Domains →
+     `yuna-tea.com` DNS**. They all live on the `send.` subdomain, so your
+     root-domain **SPF/DKIM/DMARC for M365 stays untouched**.
+   - Wait until Resend marks the domain **Verified**.
+2. **Create an API key** (Resend → API Keys) — it starts `re_…`.
+3. **Add env vars** in Netlify → Site configuration → Environment variables:
+
+   | Key | Value |
+   |-----|-------|
+   | `RESEND_API_KEY` | your `re_…` key |
+   | `ORDER_ALERT_FROM` | `Yuna Tea Orders <orders@send.yuna-tea.com>` (any name @ your verified domain) |
+   | `ORDER_ALERT_TO` | `sales@yuna-tea.com` (this is also the default if omitted) |
+   | `STRIPE_WEBHOOK_SECRET` | filled in step 5 below |
+
+4. **Deploy** (Git push, or `netlify deploy --prod`) so the function is live.
+5. **Create the Stripe webhook** on the **Yúna** account: Dashboard → **Developers
+   → Webhooks → Add endpoint**:
+   - **Endpoint URL:** `https://yuna-tea.com/.netlify/functions/order-notify`
+   - **Events:** select **`checkout.session.completed`** (just that one).
+   - Save, copy the endpoint's **Signing secret** (`whsec_…`) into the
+     `STRIPE_WEBHOOK_SECRET` env var in Netlify, and **redeploy**.
+6. **Test:** place a test order (test-mode keys + card `4242 4242 4242 4242`). A
+   formatted alert should land in `sales@yuna-tea.com` within seconds. If not,
+   check **Developers → Webhooks → your endpoint → recent deliveries** — the
+   function returns a plain-English reason (missing env var, Resend rejection, …).
+
+> **For Gaia:** repeat 5b on the Gaia Harvest account with its own webhook and
+> `ORDER_ALERT_TO=sales@gaiaharvest.org`. Each account then alerts its own inbox,
+> independent of your shared login.
 
 ## Step 6 — (Optional) Enable Alipay / WeChat Pay & more
 
@@ -160,9 +219,12 @@ the customer's shipping address and contact details for fulfilment.
 
 ## Later upgrades (not built yet)
 
-- **Branded confirmation emails** (a Yúna-designed email to the customer + a
-  formatted order alert to `sales@yuna-tea.com`): needs a small webhook function
-  + an email service (e.g. Resend) + SPF/DKIM DNS records on `yuna-tea.com`.
+- **Order alert email — ✅ built** (`netlify/functions/order-notify.js`). See
+  **Step 5b** to switch it on (Resend + a Stripe webhook). Routes each account's
+  orders to its own inbox, independent of your shared Stripe login.
+- **Branded *customer* confirmation email** (a Yúna-designed email to the buyer,
+  replacing/augmenting Stripe's plain receipt): the webhook plumbing now exists —
+  extend `order-notify.js` to also send a second email to `session.customer_details.email`.
   Worth doing once volume grows.
 - Discount codes are already allowed at checkout (`allow_promotion_codes`); create
   them in the Stripe Dashboard.
