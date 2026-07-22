@@ -1,0 +1,16 @@
+# Normalize line endings: store everything as LF in the repo, regardless of
+# whether it's edited on Windows or macOS. Prevents CRLF/LF churn in diffs.
+* text=auto eol=lf
+
+# Binary assets — never touch these (leave bytes exactly as-is).
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.webp binary
+*.woff  binary
+*.woff2 binary
+*.ttf  binary
+*.otf  binary
+*.pdf  binary
