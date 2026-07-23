@@ -1,6 +1,11 @@
 # Dependencies (Netlify installs these during build)
 node_modules/
 
+# Local dev lockfiles / artifacts (Netlify runs its own install at build;
+# `netlify dev` regenerates deno.lock each run)
+package-lock.json
+deno.lock
+
 # Netlify local state
 .netlify/
 
